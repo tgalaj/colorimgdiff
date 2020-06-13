@@ -97,7 +97,7 @@ int main(int argc, char* argv[])
         double err = std::fabs(ref_luma - src_luma);
 
         // Get Color from colormap
-        auto color = tinycolormap::GetColor(err, tinycolormap::ColormapType::Viridis);
+        auto color = tinycolormap::GetColor(err, tinycolormap::ColormapType::Hot);
         diff_image[3 * i + 0] = color.ri();
         diff_image[3 * i + 1] = color.gi();
         diff_image[3 * i + 2] = color.bi();
