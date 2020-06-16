@@ -52,3 +52,6 @@ See [tinycolormap](https://github.com/yuki-koyama/tinycolormap) repo for availab
 * [stb_image.h](https://github.com/nothings/stb) (PUBLIC DOMAIN)
 * [tinycolormap.hpp](https://github.com/yuki-koyama/tinycolormap) (MIT)
 * [cxxopts.hpp](https://github.com/jarro2783/cxxopts) (MIT)
+
+## Contribution
+Pull requests are very welcome.
