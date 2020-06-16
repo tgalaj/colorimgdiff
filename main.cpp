@@ -37,7 +37,7 @@ struct ImageMetadata
 {
     int width;
     int height;
-    int nr_channels;
+    int nr_channels = 3;
 };
 
 tinycolormap::ColormapType setColormapType(const std::string& colormap_name)
@@ -92,9 +92,12 @@ tinycolormap::ColormapType setColormapType(const std::string& colormap_name)
 
 std::vector<uint8_t> load_image(const std::string & filename, ImageMetadata& img_data)
 {
-    auto* data = stbi_load(filename.c_str(), &img_data.width, &img_data.height, &img_data.nr_channels, 3);
+    int nr_channels_in_file;
 
-    std::vector<uint8_t> img(data, data + img_data.width * img_data.height * 3);
+    img_data.nr_channels = 3;
+    auto* data = stbi_load(filename.c_str(), &img_data.width, &img_data.height, &nr_channels_in_file, img_data.nr_channels);
+
+    std::vector<uint8_t> img(data, data + img_data.width * img_data.height * img_data.nr_channels);
 
     stbi_image_free(data);
 
@@ -122,15 +125,19 @@ std::vector<double> luma(const std::vector<uint8_t>& img)
 }
 
 /* Performs linear normalization: https://en.wikipedia.org/wiki/Normalization_(image_processing) */
-void normalize_image_linear(std::vector<double> & img, double new_min, double new_max)
+std::vector<double> normalize_image_linear(const std::vector<double> & img, double new_min, double new_max)
 {
     const auto [min, max] = std::minmax_element(std::begin(img), std::end(img));
     const double ratio = (new_max - new_min) / (*max - *min);
+    
+    std::vector<double> norm_img(img.size());
 
-    for (auto& luma : img)
+    for (unsigned int i = 0; i < img.size(); ++i)
     {
-        luma = (luma - *min) * ratio + new_min;
+        norm_img[i] = (img[i] - *min) * ratio + new_min;
     }
+
+    return norm_img;
 }
 
 int main(int argc, char* argv[])
@@ -201,16 +208,16 @@ int main(int argc, char* argv[])
     auto src_luma = luma(src_data);
 
     /* Normalize both images */
-    normalize_image_linear(ref_luma, 0.0, 1.0);
-    normalize_image_linear(src_luma, 0.0, 1.0);
+    auto ref_norm_luma = normalize_image_linear(ref_luma, 0.0, 1.0);
+    auto src_norm_luma = normalize_image_linear(src_luma, 0.0, 1.0);
 
     double mse = 0.0;
 
-    std::vector<uint8_t> diff_image(ref_luma.size() * 3);
-    for (unsigned i = 0; i < ref_luma.size(); ++i)
+    std::vector<uint8_t> diff_image(ref_norm_luma.size() * 3);
+    for (unsigned i = 0; i < ref_norm_luma.size(); ++i)
     {
         // Calculate difference
-        double err = ref_luma[i] - src_luma[i];
+        double err = ref_norm_luma[i] - src_norm_luma[i];
         mse += err * err;
 
         // Get Color from colormap
@@ -232,7 +239,7 @@ int main(int argc, char* argv[])
 
     stbi_write_png(out_filename.c_str(), ref_metadata.width, ref_metadata.height, 3, diff_image.data(), 0);
 
-    mse = mse / ref_luma.size();
+    mse = mse / ref_norm_luma.size();
 
     if (verbose_output)
     {
