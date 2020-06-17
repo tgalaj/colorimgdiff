@@ -23,8 +23,9 @@ SOFTWARE.
 */
 
 #include <algorithm>
-#include <iostream>
 #include <cmath>
+#include <iostream>
+#include <map>
 #include <string>
 #include <vector>
 
@@ -42,64 +43,42 @@ struct ImageMetadata
 
 tinycolormap::ColormapType setColormapType(const std::string& colormap_name)
 {
-    if (colormap_name == "Parula")
+    static std::unordered_map<std::string, tinycolormap::ColormapType> colormaps = 
     {
-        return tinycolormap::ColormapType::Parula;
-    }
-    else if (colormap_name == "Heat")
+        {"Parula",  tinycolormap::ColormapType::Parula},
+        {"Heat",    tinycolormap::ColormapType::Heat},
+        {"Hot",     tinycolormap::ColormapType::Hot},
+        {"Jet",     tinycolormap::ColormapType::Jet},
+        {"Gray",    tinycolormap::ColormapType::Gray},
+        {"Magma",   tinycolormap::ColormapType::Magma},
+        {"Inferno", tinycolormap::ColormapType::Inferno},
+        {"Plasma",  tinycolormap::ColormapType::Plasma},
+        {"Viridis", tinycolormap::ColormapType::Viridis},
+        {"Cividis", tinycolormap::ColormapType::Cividis},
+        {"Github",  tinycolormap::ColormapType::Github}
+    };
+
+    if (colormaps.count(colormap_name))
     {
-        return tinycolormap::ColormapType::Heat;
-    }
-    else if (colormap_name == "Hot")
-    {
-        return tinycolormap::ColormapType::Hot;
-    }
-    else if (colormap_name == "Jet")
-    {
-        return tinycolormap::ColormapType::Jet;
-    }
-    else if (colormap_name == "Gray")
-    {
-        return tinycolormap::ColormapType::Gray;
-    }
-    else if (colormap_name == "Magma")
-    {
-        return tinycolormap::ColormapType::Magma;
-    }
-    else if (colormap_name == "Inferno")
-    {
-        return tinycolormap::ColormapType::Inferno;
-    }
-    else if (colormap_name == "Plasma")
-    {
-        return tinycolormap::ColormapType::Plasma;
-    }
-    else if (colormap_name == "Viridis")
-    {
-        return tinycolormap::ColormapType::Viridis;
-    }
-    else if (colormap_name == "Cividis")
-    {
-        return tinycolormap::ColormapType::Cividis;
-    }
-    else if (colormap_name == "Github")
-    {
-        return tinycolormap::ColormapType::Github;
+        return colormaps[colormap_name];
     }
 
-    return tinycolormap::ColormapType::Hot;
+    return colormaps["Hot"];
 }
 
 std::vector<uint8_t> load_image(const std::string & filename, ImageMetadata& img_data)
 {
+    std::vector<uint8_t> img;
     int nr_channels_in_file;
 
     img_data.nr_channels = 3;
     auto* data = stbi_load(filename.c_str(), &img_data.width, &img_data.height, &nr_channels_in_file, img_data.nr_channels);
 
-    std::vector<uint8_t> img(data, data + img_data.width * img_data.height * img_data.nr_channels);
-
-    stbi_image_free(data);
+    if (data)
+    {
+        img = std::vector<uint8_t>(data, data + img_data.width * img_data.height * img_data.nr_channels);
+        stbi_image_free(data);
+    }
 
     return img;
 }

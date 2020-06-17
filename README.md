@@ -47,6 +47,12 @@ See [tinycolormap](https://github.com/yuki-koyama/tinycolormap) repo for availab
 6) Outputs diff image.
 7) If ```--verbose``` option was active it also prints out MSE and RMSE.
 
+## Example
+
+| Ref | Src | Diff |
+|-----|-----|------|
+| <img src="tests/1a.png" alt="ref" width="250" height="250"/> | <img src="tests/1b.png" alt="ref" width="250" height="250"/> | <img src="tests/1diff.png" alt="ref" width="250" height="250"/> |
+
 ## Dependencies
 * [stb_image_write.h](https://github.com/nothings/stb) (PUBLIC DOMAIN)
 * [stb_image.h](https://github.com/nothings/stb) (PUBLIC DOMAIN)
