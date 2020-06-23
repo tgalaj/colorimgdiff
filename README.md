@@ -20,12 +20,8 @@ Available supported commands are being shown after executing ```colorimgdiff -h`
 Creates diff image of ref(erence) and src (source) images. It simply computes luma difference between ref and src.
 
 Usage:
-  colorimgdiff [OPTION...]
+  colorimgdiff [OPTION...] <ref_image> <src_image>
 
-  -r, --ref arg       Relative path to reference image WITH extension
-                      [REQUIRED]
-  -s, --src arg       Relative path to source image WITH extension
-                      [REQUIRED]
   -o, --out arg       Relative path to output image WITHOUT extension (it'll
                       be a PNG image) (default: output_diff)
   -c, --colormap arg  Changes the default colormap. Possible options are:
@@ -34,6 +30,8 @@ Usage:
   -v, --verbose       Verbose output
   -h, --help          Prints this message
 ```
+
+Where <ref_image> and <src_image> are relative paths (with extensions) to reference and source images respectively.
 
 ## Available Colormaps
 See [tinycolormap](https://github.com/yuki-koyama/tinycolormap) repo for available colormaps or simply run ```colorimgdiff -h```.

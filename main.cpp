@@ -122,16 +122,19 @@ std::vector<double> normalize_image_linear(const std::vector<double> & img, doub
 int main(int argc, char* argv[])
 {
     cxxopts::Options options("colorimgdiff", "Creates diff image of ref(erence) and src (source) images. It simply computes luma difference between ref and src.\n");
-    options.add_options()("r,ref", "Relative path to reference image WITH extension [REQUIRED]",                 cxxopts::value<std::string>())
-                         ("s,src", "Relative path to source image WITH extension    [REQUIRED]",                 cxxopts::value<std::string>())
-                         ("o,out", "Relative path to output image WITHOUT extension (it'll be a PNG image)",     cxxopts::value<std::string>()->default_value("output_diff"))
+    options.add_options()("r,ref",      "Relative path to reference image WITH extension [REQUIRED]",             cxxopts::value<std::string>())
+                         ("s,src",      "Relative path to source image WITH extension    [REQUIRED]",             cxxopts::value<std::string>())
+                         ("o,out",      "Relative path to output image WITHOUT extension (it'll be a PNG image)", cxxopts::value<std::string>()->default_value("output_diff"))
                          ("c,colormap", "Changes the default colormap. Possible options are: Parula, Heat, "
-                                        "Hot, Jet, Gray, Magma, Inferno, Plasma, Viridis, Cividis, Github.",     cxxopts::value<std::string>()->default_value("Hot"))
+                                        "Hot, Jet, Gray, Magma, Inferno, Plasma, Viridis, Cividis, Github.",      cxxopts::value<std::string>()->default_value("Hot"))
                          //("i,interpolate", "Choose a value from range [1, 255] if you want to disable color "
                          //                  "interpolation (default) and want to assign several values to the "
-                         //                  "same color.",                                                        cxxopts::value<int>()->default_value("-1"))
-                         ("v,verbose", "Verbose output",                                                         cxxopts::value<bool>()->default_value("false"))
-                         ("h,help", "Prints this message");
+                         //                  "same color.",                                                       cxxopts::value<int>()->default_value("-1"))
+                         ("v,verbose",  "Verbose output",                                                         cxxopts::value<bool>()->default_value("false"))
+                         ("h,help",     "Prints this message");
+    
+    options.positional_help("<ref_image> <src_image>");
+    options.parse_positional({ "ref", "src" });
 
     auto cmd_result = options.parse(argc, argv);
 
@@ -143,6 +146,7 @@ int main(int argc, char* argv[])
 
     if (!cmd_result.count("ref") || !cmd_result.count("src"))
     {
+        std::cerr << "ERROR: You have to specify relative paths to reference and source images repectively!\n\n";
         std::cout << options.help() << std::endl;
         exit(0);
     }
