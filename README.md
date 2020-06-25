@@ -48,8 +48,9 @@ See [tinycolormap](https://github.com/yuki-koyama/tinycolormap) repo for availab
 ## Example
 
 | Ref | Src | Diff luma | Diff L\*a\*b\* |
-|-----|-----|-----------|-------------|
+|-----|-----|-----------|----------------|
 | <img src="tests/1a.png" alt="ref" width="250" height="250"/> | <img src="tests/1b.png" alt="ref" width="250" height="250"/> | <img src="tests/1diff_luma.png" alt="ref" width="250" height="250"/> |  <img src="tests/1diff_lab.png" alt="ref" width="250" height="250"/> |
+| | | MSE: 0.0035<br/> RMSE: 0.0592 | Delta E: 15.118 |
 
 ## Dependencies
 * [stb_image_write.h](https://github.com/nothings/stb) (PUBLIC DOMAIN)
