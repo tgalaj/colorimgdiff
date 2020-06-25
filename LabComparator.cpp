@@ -1,4 +1,4 @@
-#include "LabComparator.h"
+#include "LabComparator.hpp"
 
 LabComparator::LabComparator(const tinycolormap::ColormapType& colormap_type, const std::string& out_filename, unsigned width, unsigned height, int interpolation_ranges)
     : BaseComparator(colormap_type, out_filename, width, height, interpolation_ranges),

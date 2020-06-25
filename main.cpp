@@ -22,8 +22,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include <algorithm>
-#include <cmath>
 #include <iostream>
 #include <map>
 #include <memory>
@@ -32,9 +30,9 @@ SOFTWARE.
 
 #include <cxxopts.hpp>
 
-#include "BaseComparator.h"
-#include "LumaComparator.h"
-#include "LabComparator.h"
+#include "BaseComparator.hpp"
+#include "LumaComparator.hpp"
+#include "LabComparator.hpp"
 
 tinycolormap::ColormapType setColormapType(const std::string& colormap_name)
 {

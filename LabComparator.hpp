@@ -1,6 +1,6 @@
 #pragma once
 
-#include "BaseComparator.h"
+#include "BaseComparator.hpp"
 
 class LabComparator final : public BaseComparator
 {

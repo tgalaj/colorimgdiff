@@ -1,4 +1,7 @@
-#include "BaseComparator.h"
+#include "BaseComparator.hpp"
+
+#include <algorithm>
+#include <cmath>
 
 #include <stb_image_write.h>
 
