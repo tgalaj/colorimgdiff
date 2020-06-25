@@ -1,7 +1,7 @@
-/*
+﻿/*
 MIT License
 
-Copyright (c) 2020 Tomasz Ga�aj
+Copyright (c) 2020 Tomasz Gałaj
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -26,20 +26,15 @@ SOFTWARE.
 #include <cmath>
 #include <iostream>
 #include <map>
+#include <memory>
 #include <string>
 #include <vector>
 
 #include <cxxopts.hpp>
-#include <stb_image.h>
-#include <stb_image_write.h>
-#include <tinycolormap.hpp>
 
-struct ImageMetadata
-{
-    int width;
-    int height;
-    int nr_channels = 3;
-};
+#include "BaseComparator.h"
+#include "LumaComparator.h"
+#include "LabComparator.h"
 
 tinycolormap::ColormapType setColormapType(const std::string& colormap_name)
 {
@@ -66,62 +61,9 @@ tinycolormap::ColormapType setColormapType(const std::string& colormap_name)
     return colormaps["Hot"];
 }
 
-std::vector<uint8_t> load_image(const std::string & filename, ImageMetadata& img_data)
-{
-    std::vector<uint8_t> img;
-    int nr_channels_in_file;
-
-    img_data.nr_channels = 3;
-    auto* data = stbi_load(filename.c_str(), &img_data.width, &img_data.height, &nr_channels_in_file, img_data.nr_channels);
-
-    if (data)
-    {
-        img = std::vector<uint8_t>(data, data + img_data.width * img_data.height * img_data.nr_channels);
-        stbi_image_free(data);
-    }
-
-    return img;
-}
-
-std::vector<double> luma(const std::vector<uint8_t>& img)
-{
-    const unsigned num_pixels = img.size() / 3;
-
-    std::vector<double> luma(num_pixels);
-
-    for (unsigned i = 0; i < num_pixels; ++i)
-    {
-        /* Conver to [0, 1] range */
-        double r = img[3 * i + 0] / 255.0;
-        double g = img[3 * i + 1] / 255.0;
-        double b = img[3 * i + 2] / 255.0;
-
-        /* Calculate luminance */
-        luma[i] = r * 0.2126 + g * 0.7152 + b * 0.0722;
-    }
-
-    return luma;
-}
-
-/* Performs linear normalization: https://en.wikipedia.org/wiki/Normalization_(image_processing) */
-std::vector<double> normalize_image_linear(const std::vector<double> & img, double new_min, double new_max)
-{
-    const auto [min, max] = std::minmax_element(std::begin(img), std::end(img));
-    const double ratio = (new_max - new_min) / (*max - *min);
-    
-    std::vector<double> norm_img(img.size());
-
-    for (unsigned int i = 0; i < img.size(); ++i)
-    {
-        norm_img[i] = (img[i] - *min) * ratio + new_min;
-    }
-
-    return norm_img;
-}
-
 int main(int argc, char* argv[])
 {
-    cxxopts::Options options("colorimgdiff", "Creates diff image of ref(erence) and src (source) images. It simply computes luma difference between ref and src.\n");
+    cxxopts::Options options("colorimgdiff", "Creates diff image of ref(erence) and src (source) images.\n");
     options.add_options()("r,ref",      "Relative path to reference image WITH extension [REQUIRED]",             cxxopts::value<std::string>())
                          ("s,src",      "Relative path to source image WITH extension    [REQUIRED]",             cxxopts::value<std::string>())
                          ("o,out",      "Relative path to output image WITHOUT extension (it'll be a PNG image)", cxxopts::value<std::string>()->default_value("output_diff"))
@@ -130,6 +72,7 @@ int main(int argc, char* argv[])
                          //("i,interpolate", "Choose a value from range [1, 255] if you want to disable color "
                          //                  "interpolation (default) and want to assign several values to the "
                          //                  "same color.",                                                       cxxopts::value<int>()->default_value("-1"))
+                         ("m,mode", "Sets the comparison mode. Available options are: Luma, Lab.",                cxxopts::value<std::string>()->default_value("Luma"))
                          ("v,verbose",  "Verbose output",                                                         cxxopts::value<bool>()->default_value("false"))
                          ("h,help",     "Prints this message");
     
@@ -153,8 +96,8 @@ int main(int argc, char* argv[])
 
     int interpolation_ranges = -1;// cmd_result["interpolate"].as<int>();
     bool verbose_output      = cmd_result["verbose"].as<bool>();
+    auto comp_mode           = cmd_result["mode"].as<std::string>();
     auto colormap_type       = setColormapType(cmd_result["colormap"].as<std::string>());
-   
 
     std::string ref_filename = cmd_result["ref"].as<std::string>();
     std::string src_filename = cmd_result["src"].as<std::string>();
@@ -162,8 +105,8 @@ int main(int argc, char* argv[])
 
     ImageMetadata ref_metadata, src_metadata;
 
-    auto ref_data = load_image(ref_filename, ref_metadata);
-    auto src_data = load_image(src_filename, src_metadata);
+    auto ref_data = BaseComparator::load_image(ref_filename, ref_metadata);
+    auto src_data = BaseComparator::load_image(src_filename, src_metadata);
 
     if (verbose_output)
     {
@@ -186,49 +129,41 @@ int main(int argc, char* argv[])
         }
     }
 
-    /* Calculate luminance of both images */
-    auto ref_luma = luma(ref_data);
-    auto src_luma = luma(src_data);
+    std::shared_ptr<BaseComparator> comparator;
 
-    /* Normalize both images */
-    auto ref_norm_luma = normalize_image_linear(ref_luma, 0.0, 1.0);
-    auto src_norm_luma = normalize_image_linear(src_luma, 0.0, 1.0);
-
-    double mse = 0.0;
-
-    std::vector<uint8_t> diff_image(ref_norm_luma.size() * 3);
-    for (unsigned i = 0; i < ref_norm_luma.size(); ++i)
+    if (comp_mode == "Luma")
     {
-        // Calculate difference
-        double err = ref_norm_luma[i] - src_norm_luma[i];
-        mse += err * err;
-
-        // Get Color from colormap
-        tinycolormap::Color color(1.0, 1.0, 1.0);
-        
-        if (interpolation_ranges < 0)
+        if (verbose_output)
         {
-            color = tinycolormap::GetColor(std::fabs(err), colormap_type);
-        }
-        else
-        {
-            // TODO
+            std::cout << "Comparing luminance..." << std::endl;
         }
 
-        diff_image[3 * i + 0] = color.ri();
-        diff_image[3 * i + 1] = color.gi();
-        diff_image[3 * i + 2] = color.bi();
+        comparator = std::make_shared<LumaComparator>(colormap_type, out_filename, ref_metadata.width, ref_metadata.height, interpolation_ranges);
+        comparator->compare(ref_data, src_data);
+
+        if (verbose_output)
+        {
+            std::cout << "Saved image " << out_filename << std::endl;
+            std::cout << "MSE:  " << comparator->get_error() << std::endl;
+            std::cout << "RMSE: " << std::sqrt(comparator->get_error()) << std::endl;
+        }
     }
 
-    stbi_write_png(out_filename.c_str(), ref_metadata.width, ref_metadata.height, 3, diff_image.data(), 0);
-
-    mse = mse / ref_norm_luma.size();
-
-    if (verbose_output)
+    if (comp_mode == "Lab")
     {
-        std::cout << "Saved image " << out_filename   << std::endl;
-        std::cout << "MSE:  "       << mse            << std::endl;
-        std::cout << "RMSE: "       << std::sqrt(mse) << std::endl;
+        if (verbose_output)
+        {
+            std::cout << "Comparing color in L*a*b* space..." << std::endl;
+        }
+        
+        comparator = std::make_shared<LabComparator>(colormap_type, out_filename, ref_metadata.width, ref_metadata.height, interpolation_ranges);
+        comparator->compare(ref_data, src_data);
+
+        if (verbose_output)
+        {
+            std::cout << "Saved image " << out_filename << std::endl;
+            std::cout << "delta E*ab:  " << comparator->get_error() << std::endl;
+        }
     }
 
     return 0;
