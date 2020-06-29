@@ -22,15 +22,16 @@ Creates diff image of ref(erence) and src (source) images.
 Usage:
   colorimgdiff [OPTION...] <ref_image> <src_image>
 
-  -o, --out arg       Relative path to output image WITHOUT extension (it'll
-                      be a PNG image) (default: output_diff)
-  -c, --colormap arg  Changes the default colormap. Possible options are:
-                      Parula, Heat, Hot, Jet, Gray, Magma, Inferno, Plasma,
-                      Viridis, Cividis, Github. (default: Hot)
-  -m, --mode arg      Sets the comparison mode. Available options are: Luma,
-                      Lab. (default: Luma)
-  -v, --verbose       Verbose output
-  -h, --help          Prints this message
+  -o, --out arg          Relative path to output image WITHOUT extension
+                         (it'll be a PNG image) (default: output_diff)
+  -c, --colormap arg     Changes the default colormap. Possible options are:
+                         Parula, Heat, Hot, Jet, Gray, Magma, Inferno, Plasma,
+                         Viridis, Cividis, Github. (default: Hot)
+  -m, --mode arg         Sets the comparison mode. Available options are:
+                         Luma, Lab. (default: Luma)
+  -v, --verbose          Verbose output
+  -p, --printmetricfile  Print metric(s) value to a *.txt file.
+  -h, --help             Prints this message
 ```
 
 Where <ref_image> and <src_image> are relative paths (with extensions) to reference and source images respectively.

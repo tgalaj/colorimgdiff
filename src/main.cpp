@@ -22,6 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+#include <fstream>
 #include <iostream>
 #include <map>
 #include <memory>
@@ -70,9 +71,10 @@ int main(int argc, char* argv[])
                          //("i,interpolate", "Choose a value from range [1, 255] if you want to disable color "
                          //                  "interpolation (default) and want to assign several values to the "
                          //                  "same color.",                                                       cxxopts::value<int>()->default_value("-1"))
-                         ("m,mode", "Sets the comparison mode. Available options are: Luma, Lab.",                cxxopts::value<std::string>()->default_value("Luma"))
-                         ("v,verbose",  "Verbose output",                                                         cxxopts::value<bool>()->default_value("false"))
-                         ("h,help",     "Prints this message");
+                         ("m,mode",      "Sets the comparison mode. Available options are: Luma, Lab.",           cxxopts::value<std::string>()->default_value("Luma"))
+                         ("v,verbose",   "Verbose output",                                                        cxxopts::value<bool>()->default_value("false"))
+                         ("p,printmetricfile", "Print metric(s) value to a *.txt file.",                                cxxopts::value<bool>()->default_value("false"))
+                         ("h,help",      "Prints this message");
     
     options.positional_help("<ref_image> <src_image>");
     options.parse_positional({ "ref", "src" });
@@ -92,14 +94,15 @@ int main(int argc, char* argv[])
         exit(0);
     }
 
-    int interpolation_ranges = -1;// cmd_result["interpolate"].as<int>();
-    bool verbose_output      = cmd_result["verbose"].as<bool>();
-    auto comp_mode           = cmd_result["mode"].as<std::string>();
-    auto colormap_type       = setColormapType(cmd_result["colormap"].as<std::string>());
+    int interpolation_ranges  = -1;// cmd_result["interpolate"].as<int>();
+    bool verbose_output       = cmd_result["verbose"].as<bool>();
+    bool print_metric_to_file = cmd_result["printmetricfile"].as<bool>();
+    auto comp_mode            = cmd_result["mode"].as<std::string>();
+    auto colormap_type        = setColormapType(cmd_result["colormap"].as<std::string>());
 
     std::string ref_filename = cmd_result["ref"].as<std::string>();
     std::string src_filename = cmd_result["src"].as<std::string>();
-    std::string out_filename = cmd_result["out"].as<std::string>() + ".png";
+    std::string out_filename = cmd_result["out"].as<std::string>();
 
     ImageMetadata ref_metadata, src_metadata;
 
@@ -145,6 +148,19 @@ int main(int argc, char* argv[])
             std::cout << "MSE:  " << comparator->get_error() << std::endl;
             std::cout << "RMSE: " << std::sqrt(comparator->get_error()) << std::endl;
         }
+
+        if (print_metric_to_file)
+        {
+            auto mse_filename  = out_filename + "_mse.txt";
+            auto rmse_filename = out_filename + "_rmse.txt";
+
+            std::ofstream out_file(mse_filename);
+            out_file << comparator->get_error();
+            out_file.close();
+
+            out_file.open(rmse_filename);
+            out_file << std::sqrt(comparator->get_error());
+        }
     }
 
     if (comp_mode == "Lab")
@@ -161,6 +177,12 @@ int main(int argc, char* argv[])
         {
             std::cout << "Saved image " << out_filename << std::endl;
             std::cout << "delta E*ab:  " << comparator->get_error() << std::endl;
+        }
+
+        if (print_metric_to_file)
+        {
+            std::ofstream out_file(out_filename + "_delta_e.txt");
+            out_file << comparator->get_error();
         }
     }
 

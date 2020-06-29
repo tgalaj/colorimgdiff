@@ -31,7 +31,7 @@ SOFTWARE.
 
 BaseComparator::BaseComparator(const tinycolormap::ColormapType& colormap_type, const std::string& out_filename, unsigned width, unsigned height, int interpolation_ranges)
     : m_colormap_type       (colormap_type),
-      m_out_filename        (out_filename),
+      m_out_filename        (out_filename + ".png"),
       m_width               (width),
       m_height              (height),
       m_interpolation_ranges(interpolation_ranges) {}
