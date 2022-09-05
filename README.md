@@ -1,5 +1,5 @@
 # colorimgdiff
-[![Build Status](https://travis-ci.com/Shot511/colorimgdiff.svg?branch=master)](https://travis-ci.com/Shot511/colorimgdiff) 
+[![Build Status](https://github.com/Shot511/colorimgdiff/actions/workflows/cpp_cmake.yml/badge.svg)](https://github.com/Shot511/colorimgdiff/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 
 An utility application to generate colored diff images (using colormaps) between reference and source images.
